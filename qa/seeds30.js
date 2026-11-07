@@ -6,7 +6,7 @@ const DAYS = +process.argv[2] || 1000;
 const rows = [];
 for (let seed = 100; seed < 130; seed++) {
   const sim = createSim(seed), S = sim.S;
-  const cash = () => S.people.reduce((a, p) => a + p.money, 0) + S.pool;
+  const cash = () => S.people.reduce((a, p) => a + p.money, 0) + S.pool + S.medFund;
   const c0 = cash(); let maxDrift = 0;
   let starveAdult = 0, starveChild = 0, rich = 0, richMax = 0, foodFloor = 0, goodsFloor = 0, minAlive = 1e9, emergency = 0;
   for (let d = 1; d <= DAYS; d++) {

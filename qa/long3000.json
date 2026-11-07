@@ -1,0 +1,93 @@
+[
+ {
+  "seed": 20261107,
+  "alive1000": 121,
+  "alive2000": 159,
+  "alive3000": 176,
+  "peak": 177,
+  "totalMs": 6172,
+  "maxStepMs": 7.9,
+  "medianStepMsAt170plus": 3.1,
+  "deaths": {
+   "年老": 18,
+   "伤病": 28
+  },
+  "gini3000": 0.341
+ },
+ {
+  "seed": 120,
+  "alive1000": 140,
+  "alive2000": 180,
+  "alive3000": 179,
+  "peak": 180,
+  "totalMs": 7235,
+  "maxStepMs": 7.9,
+  "medianStepMsAt170plus": 3.36,
+  "deaths": {
+   "年老": 11,
+   "伤病": 19
+  },
+  "gini3000": 0.343
+ },
+ {
+  "seed": 314159,
+  "alive1000": 133,
+  "alive2000": 172,
+  "alive3000": 175,
+  "peak": 180,
+  "totalMs": 6881,
+  "maxStepMs": 7.8,
+  "medianStepMsAt170plus": 3.38,
+  "deaths": {
+   "年老": 15,
+   "伤病": 19
+  },
+  "gini3000": 0.304
+ },
+ {
+  "seed": 3,
+  "alive1000": 134,
+  "alive2000": 170,
+  "alive3000": 179,
+  "peak": 180,
+  "totalMs": 6643,
+  "maxStepMs": 7.5,
+  "medianStepMsAt170plus": 3.2,
+  "deaths": {
+   "伤病": 18,
+   "年老": 17
+  },
+  "gini3000": 0.332
+ },
+ {
+  "seed": 12345,
+  "alive1000": 126,
+  "alive2000": 159,
+  "alive3000": 176,
+  "peak": 177,
+  "totalMs": 6181,
+  "maxStepMs": 7.2,
+  "medianStepMsAt170plus": 3.15,
+  "deaths": {
+   "年老": 17,
+   "伤病": 29
+  },
+  "gini3000": 0.344
+ },
+ {
+  "seed": 2,
+  "alive1000": 130,
+  "alive2000": 155,
+  "alive3000": 176,
+  "peak": 176,
+  "totalMs": 6079,
+  "maxStepMs": 8.5,
+  "medianStepMsAt170plus": 3.04,
+  "deaths": {
+   "伤病": 32,
+   "年老": 12,
+   "饥饿": 1
+  },
+  "gini3000": 0.336
+ }
+]

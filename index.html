@@ -149,7 +149,7 @@ details summary{min-height:44px;display:flex;align-items:center;cursor:pointer;f
     <p class="muted" id="logHead" style="margin:0 0 6px"></p>
     <div class="row" style="margin-bottom:6px"><select id="logFilter" style="flex:1">
       <option value="all">全部类型</option><option value="trade">交易</option><option value="coop">合作</option><option value="share">分享</option>
-      <option value="conflict">冲突</option><option value="rel">关系</option><option value="heal">治疗</option><option value="welfare">救济</option>
+      <option value="conflict">冲突</option><option value="rel">关系</option><option value="heal">生病/治疗</option><option value="welfare">救济</option>
       <option value="birth">出生</option><option value="death">死亡</option><option value="job">职业</option></select></div>
     <ul class="logl" id="logList"></ul>
   </section>
@@ -174,7 +174,7 @@ const CONFIG = {
     merchant: { name: '商人', count: 12, product: null,    base: 0,   variance: 0 },
     doctor:   { name: '医生', count: 8,  product: null,    base: 0,   variance: 0 }
   },
-  init: { ageMin: 18, ageMax: 62, moneyMedian: 50, moneySpread: 0.6, foodMin: 4, foodMax: 10,
+  init: { ageMin: 18, ageMax: 70, moneyMedian: 50, moneySpread: 0.6, foodMin: 4, foodMax: 10,
           goodsMin: 2, goodsMax: 5, skillMin: 0.1, skillMax: 0.6, acquaintances: 3, acqRelMin: 10, acqRelMax: 40,
           needMin: 70 },
   needs: { satietyDecay: 30, satietyPerFood: 20, maxFoodPerDay: 3, eatUntil: 90, goodsPerDay: 1,
@@ -197,12 +197,13 @@ const CONFIG = {
             robRate: 0.15, robMax: 15, loserHealthLoss: 12, winnerHealthLoss: 4,
             shareKind: 0.3, shareNeedFood: 2, shareGiverMin: 6, shareMax: 3, shareRelGain: 8,
             relDecay: 0.995, relForget: 0.5 },
+  illness: { dailyChance: 0.001, damageMin: 40, damageMax: 100 },
   doctor: { healBelow: 70, healAmount: 25, fee: 6, maxPatients: 3, freeKind: 0.6 },
   life: { oldAge: 65, oldAgeRisk: 0.0004, childFoodPerDay: 2, childFoodTarget: 3, childFoodKeep: 6, carerMinFood: 3, childhoodDays: 240 },
   birth: { enabled: true, minAge: 18, maxAge: 45, partnerRel: 60, minSatiety: 50, minMoney: 30,
-           dailyChance: 0.0025, cooldown: 300, giftEach: 10, parentRel: 50, traitNoise: 0.3, babySatiety: 80, babyEnergy: 80, babyHealth: 100 },
-  welfare: { enabled: true, taxThreshold: 100, taxRate: 0.02, povertyLine: 10 },
-  jobSwitch: { every: 30, bottomShare: 0.1, newSkill: 0.2, shortageShare: 0.3 },
+           dailyChance: 0.004, foodPerCapitaFull: 6, softCap: 180, cooldown: 300, giftEach: 10, parentRel: 50, traitNoise: 0.3, babySatiety: 80, babyEnergy: 80, babyHealth: 100 },
+  welfare: { enabled: true, taxThreshold: 100, taxRate: 0.02, povertyLine: 10, medicalShare: 0.3, medicalFundCap: 100 },
+  jobSwitch: { every: 30, bottomShare: 0.1, newSkill: 0.2, shortageShare: 0.3, minWorkers: { doctor: 4, merchant: 3 } },
   limits: { historyDays: 5000, logPerDay: 300, personalLog: 12 }
 };
 
@@ -236,7 +237,7 @@ function createSim(seed) {
   const S = {
     seed: seed >>> 0, day: 0, people: [], byId: new Map(), nextId: 1,
     prices: { food: C.market.foodPrice0, goods: C.market.goodsPrice0 },
-    totals: { dead: 0, births: 0 }, pool: 0, foodShortDays: 0, goodsShortDays: 0, today: null, log: [], history: [], usedNames: new Set()
+    totals: { dead: 0, births: 0 }, pool: 0, medFund: 0, foodShortDays: 0, goodsShortDays: 0, today: null, log: [], history: [], usedNames: new Set()
   };
 
   function makeName(surname) {
@@ -312,7 +313,7 @@ function createSim(seed) {
 
   function newToday() {
     return { trades: 0, coop: 0, conflict: 0, share: 0, heal: 0, foodEaten: 0, goodsUsed: 0, foodProduced: 0,
-      goodsProduced: 0, foodSpoiled: 0, deaths: 0, births: 0, newFriends: 0, brokenFriends: 0, newEnemies: 0, taxed: 0, aided: 0, emergency: 0, barter: 0, helpers: 0, mkt: {}, toFarm: 0, short: { food: false, goods: false }, sellAbove: { food: 0, goods: 0 }, lostToPool: 0,
+      goodsProduced: 0, foodSpoiled: 0, deaths: 0, births: 0, newFriends: 0, brokenFriends: 0, newEnemies: 0, taxed: 0, aided: 0, emergency: 0, barter: 0, helpers: 0, idle: 0, mkt: {}, toFarm: 0, birthChance: 0, sick: 0, short: { food: false, goods: false }, sellAbove: { food: 0, goods: 0 }, lostToPool: 0,
       log: [], logDropped: 0 };
   }
 
@@ -336,7 +337,7 @@ function createSim(seed) {
       gini: gini(w), totalWealth: w.reduce((a, b) => a + b, 0), totalMoney: alive.reduce((a, p) => a + p.money, 0),
       foodStock: alive.reduce((a, p) => a + p.food, 0), goodsStock: alive.reduce((a, p) => a + p.goods, 0),
       foodEaten: t.foodEaten, goodsUsed: t.goodsUsed, foodProduced: t.foodProduced, goodsProduced: t.goodsProduced,
-      foodSpoiled: t.foodSpoiled, coop: t.coop, conflict: t.conflict, share: t.share, trades: t.trades, heal: t.heal, taxed: t.taxed, aided: t.aided, emergency: t.emergency, barter: t.barter, helpers: t.helpers, idle: t.idle, toFarm: t.toFarm, foodSellAbove: t.sellAbove.food, lostToPool: t.lostToPool, pool: S.pool,
+      foodSpoiled: t.foodSpoiled, coop: t.coop, conflict: t.conflict, share: t.share, trades: t.trades, heal: t.heal, taxed: t.taxed, aided: t.aided, emergency: t.emergency, barter: t.barter, medFund: S.medFund, birthChance: t.birthChance, sick: t.sick, helpers: t.helpers, idle: t.idle, toFarm: t.toFarm, foodSellAbove: t.sellAbove.food, lostToPool: t.lostToPool, pool: S.pool,
       foodPrice: S.prices.food, goodsPrice: S.prices.goods, friends, enemies
     });
     if (S.history.length > C.limits.historyDays) S.history.splice(1, 1); // 保留第0天，丢弃最早的
@@ -370,6 +371,17 @@ function createSim(seed) {
     }
   }
 
+  function phaseIllness() {
+    const I = C.illness;
+    for (const p of S.people) {
+      if (!p.alive || R() >= I.dailyChance) continue;
+      const dmg = I.damageMin + R() * (I.damageMax - I.damageMin);
+      p.health -= dmg; S.today.sick++;
+      log('heal', p.name + ' 生病了，健康 −' + Math.round(dmg), [p.id]);
+      if (p.health <= 0) die(p, '伤病'); // 重病：健康直接降到 0 以下，当天去世
+    }
+  }
+
   function phaseDoctor() {
     const D = C.doctor;
     const docs = S.people.filter(p => p.worked && p.job === 'doctor');
@@ -381,10 +393,13 @@ function createSim(seed) {
       for (const pt of patients) {
         if (n >= D.maxPatients) break;
         if (done.has(pt.id) || pt === d) continue;
+        let payer = '';
         if (pt.money >= D.fee) { pt.money -= D.fee; d.money += D.fee; d.earn += D.fee; }
+        else if (S.medFund >= D.fee) { S.medFund -= D.fee; d.money += D.fee; d.earn += D.fee; payer = '（诊费由医疗基金代付）'; }
         else if (d.kind <= D.freeKind) continue; // 这位医生不免费治，病人留在队列里等下一位医生
+        else payer = '（免费）';
         pt.health = Math.min(100, pt.health + D.healAmount); n++; S.today.heal++; done.add(pt.id);
-        log('heal', d.name + '（医生）为 ' + pt.name + ' 治疗', [d.id, pt.id]);
+        log('heal', d.name + '（医生）为 ' + pt.name + ' 治疗' + payer, [d.id, pt.id]);
       }
     }
   }
@@ -482,6 +497,10 @@ function createSim(seed) {
     }
   }
 
+  function jobCount(job) { let n = 0; for (const p of S.people) if (isAdult(p) && p.job === job) n++; return n; }
+  // 保底职业：人数已经不超过保底人数时，不因断粮改行，也不会在定期转行中被换走
+  function atMinimum(job) { const m = C.jobSwitch.minWorkers[job]; return m !== undefined && jobCount(job) <= m; }
+
   function phaseEmergency() {
     const E = C.emergency;
     const hungry = S.people.filter(p => p.alive && p.food < E.foodBelow).sort((a, b) => a.satiety - b.satiety || a.id - b.id);
@@ -509,7 +528,7 @@ function createSim(seed) {
         }
       }
       if (got > 0) log('trade', h.name + ' 断粮，紧急高价买入 ' + got + ' 份食物（每份 ' + unit.toFixed(2) + ' 元）', [h.id]);
-      if (got + bartered === 0 && isAdult(h) && C.jobs[h.job].product !== 'food') {
+      if (got + bartered === 0 && isAdult(h) && C.jobs[h.job].product !== 'food' && !atMinimum(h.job)) {
         log('job', h.name + ' 断粮又买不到粮，改行做' + C.jobs[E.switchJob].name + '自己种粮', [h.id]);
         h.job = E.switchJob; h.skill = E.switchSkill; S.today.toFarm++;
       }
@@ -577,6 +596,10 @@ function createSim(seed) {
     const B = C.birth;
     if (!B.enabled) return;
     let alive = S.people.reduce((a, p) => a + (p.alive ? 1 : 0), 0);
+    // 生育率随资源和拥挤程度变化：人均存粮越多越高（到 foodPerCapitaFull 封顶），人越接近 softCap 越低
+    const foodPC = S.people.reduce((a, p) => a + (p.alive ? p.food : 0), 0) / Math.max(1, alive);
+    const chance = B.dailyChance * clamp(foodPC / B.foodPerCapitaFull, 0, 1) * Math.max(0, 1 - alive / B.softCap);
+    S.today.birthChance = chance;
     const cands = S.people.filter(p => p.alive && p.age >= B.minAge && p.age <= B.maxAge);
     for (const a of cands) {
       if (alive >= C.maxPopulation) break;
@@ -586,7 +609,7 @@ function createSim(seed) {
         if (!b || !b.alive || b.age < B.minAge || b.age > B.maxAge) continue;
         if (a.satiety < B.minSatiety || b.satiety < B.minSatiety || a.money + b.money < B.minMoney) continue;
         if (S.day - a.lastBirth < B.cooldown || S.day - b.lastBirth < B.cooldown) continue;
-        if (R() >= B.dailyChance) continue;
+        if (R() >= chance) continue;
         const mix = (x, y) => clamp((x + y) / 2 + (R() - 0.5) * B.traitNoise, 0, 1);
         const ga = Math.min(B.giftEach, a.money), gb = Math.min(B.giftEach, b.money);
         a.money -= ga; b.money -= gb;
@@ -609,6 +632,7 @@ function createSim(seed) {
     for (const p of adults) if (p.money > Wf.taxThreshold) { const t = (p.money - Wf.taxThreshold) * Wf.taxRate; p.money -= t; tax += t; }
     const poor = adults.filter(p => p.money < Wf.povertyLine);
     S.today.taxed = tax;
+    const med = Math.min(tax * Wf.medicalShare, Math.max(0, Wf.medicalFundCap - S.medFund)); S.medFund += med; tax -= med;
     const pot = tax + S.pool;
     if (pot <= 0 || !adults.length) return;
     S.pool = 0;
@@ -616,7 +640,7 @@ function createSim(seed) {
     const each = pot / poor.length;
     for (const p of poor) p.money += each;
     S.today.aided = poor.length;
-    log('welfare', '公共救济：收税 ' + tax.toFixed(1) + ' 元' + (pot - tax > 0.005 ? '（加上救济池里的 ' + (pot - tax).toFixed(1) + ' 元）' : '') + '，平均发给 ' + poor.length + ' 位穷人（每人 ' + each.toFixed(2) + ' 元）');
+    log('welfare', '公共救济：收税 ' + (tax + med).toFixed(1) + ' 元（其中 ' + med.toFixed(1) + ' 元进医疗基金）' + (pot - tax > 0.005 ? '（加上救济池里的 ' + (pot - tax).toFixed(1) + ' 元）' : '') + '，平均发给 ' + poor.length + ' 位穷人（每人 ' + each.toFixed(2) + ' 元）');
   }
 
   function phaseJobSwitch() {
@@ -638,9 +662,24 @@ function createSim(seed) {
     S.foodShortDays = 0; S.goodsShortDays = 0;
     const sorted = adults.slice().sort((a, b) => wealth(a) - wealth(b) || a.id - b.id);
     const n = Math.floor(sorted.length * J.bottomShare);
+    const count = {}; for (const k of jobKeys) count[k] = cnt[k];
+    const protectedNow = p => J.minWorkers[p.job] !== undefined && count[p.job] <= J.minWorkers[p.job];
+    const change = (p, job) => { log('job', p.name + ' 从' + C.jobs[p.job].name + '转行做' + C.jobs[job].name, [p.id]); count[p.job]--; count[job]++; p.job = job; p.skill = J.newSkill; };
+    const lacking = () => Object.keys(J.minWorkers).find(k => count[k] < J.minWorkers[k]);
+    // 最穷的一批人转行：先补足保底职业（医生、商人），再去 best；保底职业的人不会被换到低于保底
     for (let i = 0; i < n; i++) {
       const p = sorted[i];
-      if (p.job !== best) { log('job', p.name + ' 从' + C.jobs[p.job].name + '转行做' + C.jobs[best].name, [p.id]); p.job = best; p.skill = J.newSkill; }
+      if (protectedNow(p)) continue;
+      const lack = lacking();
+      if (lack && p.job !== lack) change(p, lack);
+      else if (!lack && p.job !== best) change(p, best);
+    }
+    // 如果还没补足保底，继续从更穷的往上找
+    for (let i = n; i < sorted.length; i++) {
+      const lack = lacking(); if (!lack) break;
+      const p = sorted[i];
+      if (p.job === lack || protectedNow(p)) continue;
+      change(p, lack);
     }
     for (const p of adults) p.earn = 0;
   }
@@ -648,8 +687,9 @@ function createSim(seed) {
   function phaseAging() {
     for (const p of S.people) if (p.alive) {
       const wasChild = p.age < C.work.adultAge;
-      p.age += wasChild ? C.work.adultAge / C.life.childhoodDays : 1 / 365; // 童年被压缩：childhoodDays 天长到成年
-      if (wasChild && p.age > C.work.adultAge) p.age = C.work.adultAge;
+      // 童年被压缩：出生后第 childhoodDays 天正好长到成年年龄；成年后每天 +1/365 岁
+      if (wasChild) p.age = Math.min(C.work.adultAge, C.work.adultAge * (S.day - p.bornDay) / C.life.childhoodDays);
+      else p.age += 1 / 365;
       if (wasChild && p.age >= C.work.adultAge) log('job', p.name + ' 成年，开始做' + C.jobs[p.job].name, [p.id]);
     }
   }
@@ -670,7 +710,7 @@ function createSim(seed) {
   function step() {
     S.day++;
     S.today = newToday();
-    phaseWelfare(); phaseWork(); phaseDoctor(); phaseMarket('food'); phaseMarket('goods'); phaseSocial();
+    phaseWelfare(); phaseIllness(); phaseWork(); phaseDoctor(); phaseMarket('food'); phaseMarket('goods'); phaseSocial();
     phaseFeedChildren(); phaseEmergency(); phaseConsume(); phaseDeath(); phaseBirth(); phaseAging(); phaseJobSwitch(); phaseDecay();
     if (S.today.short.food) S.foodShortDays++;
     if (S.today.short.goods) S.goodsShortDays++;
@@ -681,7 +721,7 @@ function createSim(seed) {
     // 覆盖全部状态：天数、随机数状态、价格、救济池、累计数、缺粮天数，以及每位居民的所有字段（含全部关系分）
     let h = 0x811c9dc5;
     const add = x => { const s = String(x); for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } h ^= 124; h = Math.imul(h, 16777619); };
-    add(S.day); add(rng.state()); add(S.nextId); add(S.prices.food); add(S.prices.goods); add(S.pool); add(S.foodShortDays); add(S.goodsShortDays);
+    add(S.day); add(rng.state()); add(S.nextId); add(S.prices.food); add(S.prices.goods); add(S.pool); add(S.medFund); add(S.foodShortDays); add(S.goodsShortDays);
     add(S.totals.dead); add(S.totals.births);
     for (const p of S.people) {
       for (const k of HASH_FIELDS) add(p[k]);
@@ -704,7 +744,7 @@ function createSim(seed) {
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const COLORS = { a: '#2f6f5e', b: '#c0563f', c: '#d79b2b', d: '#4a78b5', e: '#8a62b0' };
   const TAGS = { trade: ['交易', '#4a78b5'], coop: ['合作', '#2f6f5e'], share: ['分享', '#5f9e6e'], conflict: ['冲突', '#c0563f'],
-    rel: ['关系', '#8a62b0'], heal: ['治疗', '#3b8ea5'], welfare: ['救济', '#d79b2b'], birth: ['出生', '#e07a9a'], death: ['死亡', '#555'], job: ['职业', '#8b7a55'] };
+    rel: ['关系', '#8a62b0'], heal: ['医疗', '#3b8ea5'], welfare: ['救济', '#d79b2b'], birth: ['出生', '#e07a9a'], death: ['死亡', '#555'], job: ['职业', '#8b7a55'] };
 
   let sim, timer = null, tab = 'charts', stepTimes = [], lastHashAt = 0;
   const params = new URLSearchParams(location.search);
@@ -718,42 +758,57 @@ function createSim(seed) {
     renderAll();
   }
 
-  function stepDays(n) {
+  function stepDays(n, budgetMs) {
     const t0 = performance.now();
-    for (let i = 0; i < n; i++) sim.step();
+    let done = 0;
+    for (; done < n; done++) { if (budgetMs && done > 0 && performance.now() - t0 > budgetMs) break; sim.step(); }
     const dt = performance.now() - t0;
-    stepTimes.push(dt / n); if (stepTimes.length > 50) stepTimes.shift();
+    if (done) { stepTimes.push(dt / done); if (stepTimes.length > 50) stepTimes.shift(); }
     renderAll();
-    return dt;
+    return done;
   }
 
   function aliveCount() { return sim.S.history[sim.S.history.length - 1].alive; }
 
+  // 自动运行：每 TICK 毫秒按真实流逝时间补足应走的天数（每次最多花 STEP_BUDGET 毫秒计算），
+  // 图表和列表在运行中最多每 HEAVY_EVERY 毫秒重绘一次，这样人多时也尽量跑到标称速度；实际速度显示在右上角。
+  const TICK = 50, STEP_BUDGET = 30, HEAVY_EVERY = 250;
+  let debt = 0, lastTick = 0, lastHeavy = 0, runLog = [];
   function start() {
     if (timer) return;
     const sp = Number($('speed').value);
-    const perTick = sp > 20 ? Math.round(sp / 20) : 1;
-    const interval = sp > 20 ? 50 : 1000 / sp;
-    timer = setInterval(() => { if (aliveCount() === 0) { stop(); return; } stepDays(perTick); }, interval);
+    debt = 1; lastTick = performance.now(); runLog = [[lastTick, sim.S.day]];
+    timer = setInterval(() => {
+      if (aliveCount() === 0) { stop(); return; }
+      const now = performance.now();
+      debt = Math.min(debt + (now - lastTick) * sp / 1000, Math.max(2, sp / 4)); lastTick = now;
+      const n = Math.floor(debt);
+      if (n > 0) debt -= stepDays(n, STEP_BUDGET);
+      runLog.push([performance.now(), sim.S.day]); while (runLog.length > 2 && runLog[runLog.length - 1][0] - runLog[0][0] > 2000) runLog.shift();
+    }, TICK);
     $('btnRun').textContent = '⏸ 暂停';
   }
-  function stop() { const was = !!timer; if (timer) clearInterval(timer); timer = null; if (was && sim) $('hashLabel').textContent = sim.hash(); const b = $('btnRun'); if (b) b.textContent = sim && sim.S.day > 0 ? '▶ 继续运行' : '▶ 自动运行'; }
+  function actualSpeed() { if (!timer || runLog.length < 2) return null; const a = runLog[0], b = runLog[runLog.length - 1]; return b[0] > a[0] ? (b[1] - a[1]) * 1000 / (b[0] - a[0]) : null; }
+  function stop() { const was = !!timer; if (timer) clearInterval(timer); timer = null; if (was && sim) { $('hashLabel').textContent = sim.hash(); renderAll(); } const b = $('btnRun'); if (b) b.textContent = sim && sim.S.day > 0 ? '▶ 继续运行' : '▶ 自动运行'; }
 
   // ---------- 渲染 ----------
   function renderAll() {
     const S = sim.S, h = S.history[S.history.length - 1];
     $('dayLabel').textContent = '第 ' + S.day + ' 天';
     const avg = stepTimes.length ? stepTimes.reduce((a, b) => a + b, 0) / stepTimes.length : 0;
-    $('perfLabel').textContent = stepTimes.length ? '每天计算约 ' + avg.toFixed(2) + ' 毫秒' : '';
+    const asp = actualSpeed();
+    $('perfLabel').textContent = (stepTimes.length ? '每天计算约 ' + avg.toFixed(2) + ' 毫秒' : '') + (asp !== null ? ' · 实际每秒 ' + asp.toFixed(1) + ' 天' : '');
     // 指纹覆盖全部状态，计算稍慢：自动运行时最多每秒更新一次，暂停或单步时立即更新
     const now = performance.now();
     if (!timer || now - lastHashAt > 1000) { $('hashLabel').textContent = sim.hash(); lastHashAt = now; }
     const st = [
       ['在世', h.alive], ['累计去世', h.dead], ['累计出生', h.births], ['基尼系数', h.gini.toFixed(3)],
       ['总财富', fmt(h.totalWealth)], ['今日合作', h.coop], ['今日冲突', h.conflict], ['今日分享', h.share],
-      ['今日成交', h.trades], ['今日吃掉食物', h.foodEaten], ['食物价', h.foodPrice.toFixed(2)], ['物品价', h.goodsPrice.toFixed(2)]
+      ['今日成交', h.trades], ['今日吃掉食物', fmt(h.foodEaten, 1)], ['食物价', h.foodPrice.toFixed(2)], ['物品价', h.goodsPrice.toFixed(2)]
     ];
     $('stats').innerHTML = st.map(x => '<div class="stat"><b>' + x[1] + '</b><span>' + x[0] + '</span></div>').join('');
+    if (timer && now - lastHeavy < HEAVY_EVERY) return;
+    lastHeavy = now;
     if (tab === 'charts') renderCharts();
     if (tab === 'people') renderPeople();
     if (tab === 'log') renderLog();
@@ -895,7 +950,8 @@ function createSim(seed) {
 
   // ---------- 规则说明（由 CONFIG 生成） ----------
   function renderRules() {
-    const J = C.jobs, N = C.needs, W = C.work, M = C.market, SC = C.social, D = C.doctor, L = C.life, B = C.birth, Wf = C.welfare, JS = C.jobSwitch, I = C.init, E = C.emergency;
+    const J = C.jobs, N = C.needs, W = C.work, M = C.market, SC = C.social, D = C.doctor, L = C.life, B = C.birth, Wf = C.welfare, JS = C.jobSwitch, I = C.init, E = C.emergency, IL = C.illness;
+    const minW = Object.keys(JS.minWorkers).map(k => J[k].name + ' ' + JS.minWorkers[k] + ' 人').join('、');
     const jobRows = Object.keys(J).map(k => {
       const j = J[k];
       const what = j.product === 'food' ? '生产食物' : j.product === 'goods' ? '生产物品' : k === 'merchant' ? '市场抽成' : '给人治病收费';
@@ -908,7 +964,7 @@ function createSim(seed) {
 <ul>
 <li>开局 <b>${C.population}</b> 位居民；在世人数达到 <b>${C.maxPopulation}</b> 人后不再有新生儿。</li>
 <li>每位居民有：姓名、年龄、职业与技能熟练度、性格（善良、贪婪、攻击性、社交性，各 0–100）、现金、食物、物品、饱食度、体力、健康，以及和别人的关系分（−100 到 +100）。</li>
-<li>每过一天，按顺序发生：<b>公共救济 → 工作 → 看病 → 食物市场 → 物品市场 → 社交（分享/合作/冲突/闲聊） → 喂孩子 → 断粮者紧急买粮 → 吃饭和休息 → 死亡判定 → 出生 → 年龄增长 → 转行（每 ${JS.every} 天） → 关系自然淡化</b>。</li>
+<li>每过一天，按顺序发生：<b>公共救济 → 生病 → 工作 → 看病 → 食物市场 → 物品市场 → 社交（分享/合作/冲突/闲聊） → 喂孩子 → 断粮者紧急买粮 → 吃饭和休息 → 死亡判定 → 出生 → 年龄增长 → 转行（每 ${JS.every} 天） → 关系自然淡化</b>。</li>
 <li>财富 = 现金 + 食物 × 当前食物价 + 物品 × 当前物品价。</li>
 </ul>
 <h3>2. 初始状态</h3>
@@ -943,11 +999,13 @@ function createSim(seed) {
 <li>每成交一笔，买卖双方关系 +${M.tradeRelGain}。</li>
 <li>价格随供需变化：如果拿出来卖的全部卖光了还有人没买到，价格 × (1 + ${M.priceUp} × 没买到的量 ÷ 想买的总量)，也就是缺得越多涨得越快，一天最多涨 ${pct(M.priceUp)}；如果有没卖掉的，价格 × (1 − ${M.priceDown} × 没卖掉的量 ÷ 拿出来卖的总量)。价格限制在 ${M.priceMin}–${M.priceMax} 元之间。开局食物 ${M.foodPrice0} 元/份，物品 ${M.goodsPrice0} 元/件。</li>
 <li><b>断粮紧急买粮</b>：喂完孩子之后，任何手上食物少于 ${E.foodBelow} 份的人（包括孩子，最饿的先买）可以向食物至少 ${E.sellerReserve + 1} 份的成年人（存粮最多的先卖）紧急买最多 ${E.buyQty} 份，卖家至少留 ${E.sellerReserve} 份。紧急价 = 当前食物价 × ${1 + E.markup}。钱不够时，可以用物品按“紧急价 ÷ 当前物品价”件换 1 份。</li>
-<li>如果断粮的成年人这样还一份粮都弄不到，而且不是产粮职业（农夫、渔夫），就立刻改行做${J[E.switchJob].name}自己种粮，技能从 ${pct(E.switchSkill)} 开始。</li>
+<li>如果断粮的成年人这样还一份粮都弄不到，而且不是产粮职业（农夫、渔夫），就立刻改行做${J[E.switchJob].name}自己种粮，技能从 ${pct(E.switchSkill)} 开始。<b>例外</b>：如果他的职业人数已经不超过保底人数（${minW}，见第 11 条），就不改行。</li>
 </ul>
-<h3>6. 医生</h3>
+<h3>6. 生病与医生</h3>
+<ul><li><b>生病</b>：每天每人有 ${pct(IL.dailyChance)} 的概率生病，健康减少 ${IL.damageMin}–${IL.damageMax}（随机）。如果健康因此降到 0 以下，当天就因“伤病”去世（重病）。</li>
+<li><b>医疗基金</b>：公共救济收上来的税里，${pct(Wf.medicalShare)} 存进医疗基金（见第 8 条），基金最多存 ${Wf.medicalFundCap} 元，存满后税款全部用于救济。病人付不起诊费时，先由医疗基金代付给医生；基金也不够时，才看医生是否愿意免费治。</li></ul>
 <ul><li>健康低于 ${D.healBelow} 的人按病情从重到轻排队。医生一个接一个看队列，每位当天工作的医生最多治疗 ${D.maxPatients} 人，医生不给自己治。每次健康 +${D.healAmount}，收费 ${D.fee} 元。</li>
-<li>病人付不起钱时，只有善良度高于 ${pct(D.freeKind)} 的医生会免费治；不肯免费治的医生会跳过他，但他<b>留在队列里</b>，后面的医生还能看到他。</li></ul>
+<li>病人自己和医疗基金都付不起时，只有善良度高于 ${pct(D.freeKind)} 的医生会免费治；不肯免费治的医生会跳过他，但他<b>留在队列里</b>，后面的医生还能看到他。</li></ul>
 <h3>7. 社交：分享、合作、冲突、关系</h3>
 <ul>
 <li>每位成年人每天主动见 ${SC.meetBase} + 四舍五入(社交性 × ${SC.meetExtra}) 个人。有 ${pct(SC.friendPick)} 的机会优先找朋友，否则随机找人。</li>
@@ -963,8 +1021,8 @@ function createSim(seed) {
 <li>关系分 ≥ ${SC.friendThreshold} 算朋友，≤ ${SC.enemyThreshold} 算仇人。跨过这些线时会在事件里记录“成为朋友 / 友谊破裂 / 结仇”。每天所有关系分 × ${SC.relDecay}（慢慢淡化；绝对值小于 ${SC.relForget} 时就忘了对方，关系删除）。</li>
 </ul>
 <h3>8. 公共救济（资源再分配）</h3>
-<ul><li>${Wf.enabled ? '开启。' : '关闭（无人继承的现金会一直留在救济池里）。'}每天开始时，成年人现金超过 ${Wf.taxThreshold} 元的部分收 ${pct(Wf.taxRate)} 的税。税款加上“救济池”里的钱（来自无人继承的遗产，见第 9 条）全部平均发给现金少于 ${Wf.povertyLine} 元的成年人；如果没有穷人，就平均发给所有成年人。</li>
-<li>所以全社会的现金总数（所有人的现金 + 救济池）永远不变，钱只会在人和人之间转移。</li></ul>
+<ul><li>${Wf.enabled ? '开启。' : '关闭（无人继承的现金会一直留在救济池里）。'}每天开始时，成年人现金超过 ${Wf.taxThreshold} 元的部分收 ${pct(Wf.taxRate)} 的税，其中 ${pct(Wf.medicalShare)} 存进医疗基金（第 6 条，基金上限 ${Wf.medicalFundCap} 元）。其余税款加上“救济池”里的钱（来自无人继承的遗产，见第 9 条）全部平均发给现金少于 ${Wf.povertyLine} 元的成年人；如果没有穷人，就平均发给所有成年人。</li>
+<li>所以全社会的现金总数（所有人的现金 + 救济池 + 医疗基金）永远不变，钱只会在人和人之间转移。</li></ul>
 <h3>9. 死亡与继承</h3>
 <ul>
 <li>健康降到 0 就会去世：当时饱食度为 0 记作“饥饿”，否则记作“伤病”。</li>
@@ -973,14 +1031,15 @@ function createSim(seed) {
 </ul>
 <h3>10. 出生（可选规则，当前${B.enabled ? '开启' : '关闭'}）</h3>
 <ul>
-<li>两位 ${B.minAge}–${B.maxAge} 岁、关系分 ≥ ${B.partnerRel}、饱食度都 ≥ ${B.minSatiety}、两人现金合计 ≥ ${B.minMoney} 元的居民，每天有 ${pct(B.dailyChance)} 的概率生孩子；每人生育后要隔 ${B.cooldown} 天。</li>
+<li>两位 ${B.minAge}–${B.maxAge} 岁、关系分 ≥ ${B.partnerRel}、饱食度都 ≥ ${B.minSatiety}、两人现金合计 ≥ ${B.minMoney} 元的居民，每天有一定概率生孩子。概率 = ${pct(B.dailyChance)} × 资源系数 × 拥挤系数：资源系数 = 全社会人均存粮 ÷ ${B.foodPerCapitaFull}（最高 1）；拥挤系数 = 1 − 在世人数 ÷ ${B.softCap}（最低 0）。所以粮食少时生得少，人口越接近 ${B.softCap} 越难再增加。每人生育后要隔 ${B.cooldown} 天。</li>
 <li>父母各给孩子最多 ${B.giftEach} 元。孩子每项性格 = 父母平均值 + 随机（±${B.traitNoise / 2}，限制在 0–1），和父母关系分 ${B.parentRel}；出生时饱食度 ${B.babySatiety}、体力 ${B.babyEnergy}、健康 ${B.babyHealth}。</li>
 <li>孩子不工作也不参与社交。每天由父母喂饭（父母都不在了，就由食物多于 ${L.carerMinFood} 份、存粮最多的一位成年人来喂）：把孩子的存粮补到 ${L.childFoodTarget} 份，每天最多给 ${L.childFoodPerDay} 份。孩子存粮超过 ${L.childFoodKeep} 份的部分会还给喂他的大人。</li>
-<li>为了在模拟时间里看到新一代，<b>童年被压缩</b>：孩子出生后 ${L.childhoodDays} 天就长到 ${W.adultAge} 岁成年，之后每天按 1/365 岁正常变老。成年后做父母一方的职业。</li>
+<li>为了在模拟时间里看到新一代，<b>童年被压缩</b>：孩子的年龄 = ${W.adultAge} × 出生后经过的天数 ÷ ${L.childhoodDays}，所以出生当天是 0 岁，正好在出生后第 ${L.childhoodDays} 天满 ${W.adultAge} 岁成年；之后每天按 1/365 岁正常变老。成年后做父母一方的职业。</li>
 </ul>
 <h3>11. 转行</h3>
 <ul><li>每 ${JS.every} 天，统计过去这段时间各职业的平均收入；财富最低的 ${pct(JS.bottomShare)} 成年人改行，技能重置为 ${pct(JS.newSkill)}。</li>
-<li>去哪一行：如果这段时间里至少 ${pct(JS.shortageShare)} 的天数食物“卖光了还有人买不到”，就只在产粮职业（农夫、渔夫）里挑平均收入最高的；否则如果物品经常这样缺，就去做工匠；都不缺时，去平均收入最高的职业。</li>
+<li><b>保底职业</b>：${minW}。转行时先补足人数不够的保底职业；保底职业的人在本职业人数不超过保底人数时不会被换走（如果最穷的那批人不够补，就继续从更穷的往上找）。</li>
+<li>补足保底之后，其余人去哪一行：如果这段时间里至少 ${pct(JS.shortageShare)} 的天数食物“卖光了还有人买不到”，就只在产粮职业（农夫、渔夫）里挑平均收入最高的；否则如果物品经常这样缺，就去做工匠；都不缺时，去平均收入最高的职业。</li>
 <li>另见第 5 条：断粮又买不到粮的非产粮成年人会立刻改行做${J[E.switchJob].name}。</li></ul>
 <h3>12. 统计口径</h3>
 <ul>

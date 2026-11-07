@@ -75,6 +75,21 @@ const results = { url: URL, tag: TAG, startedAt: new Date().toString(), widths: 
     for (let i = 0; i < 3; i++) await page.click('#btnStep');
     R.uiSeed = await page.evaluate(() => ({ seed: window.__ms.sim().S.seed, day: window.__ms.sim().S.day, hash: window.__ms.sim().hash() }));
     if (width === 375) {
+      // 满员（约 180 人）时的自动运行实际速度：不限速 和 CPU 4 倍限速（模拟手机）
+      R.fullPopSpeed = [];
+      const cdp = await ctx.newCDPSession(page);
+      for (const rate of [1, 4]) {
+        await cdp.send('Emulation.setCPUThrottlingRate', { rate });
+        await page.evaluate(() => { const ms = window.__ms; ms.reset(120); for (let i = 0; i < 3000; i++) ms.sim().step(); ms.stepDays(0); });
+        await page.click('[data-tab=charts]'); await page.selectOption('#speed', '60');
+        const a = await page.evaluate(() => ({ day: window.__ms.sim().S.day, alive: window.__ms.sim().S.history.at(-1).alive }));
+        await page.click('#btnRun'); await page.waitForTimeout(4000);
+        const label = await page.evaluate(() => document.getElementById('perfLabel').textContent);
+        await page.click('#btnRun');
+        const b = await page.evaluate(() => window.__ms.sim().S.day);
+        R.fullPopSpeed.push({ cpuThrottle: rate, alive: a.alive, nominalPerSec: 60, daysIn4s: b - a.day, perSec: (b - a.day) / 4, perfLabel: label });
+      }
+      await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
       R.sample = await page.evaluate(() => { const ms = window.__ms; ms.reset(20261107); for (let i = 0; i < 1000; i++) ms.sim().step(); const H = ms.sim().S.history; return [0, 30, 100, 365, 1000].map(d => H.find(r => r.day === d)); });
     }
     await check('final');
@@ -89,11 +104,11 @@ const results = { url: URL, tag: TAG, startedAt: new Date().toString(), widths: 
   results.finishedAt = new Date().toString();
   fs.writeFileSync(`/workspace/micro-society/qa/results-${TAG}.json`, JSON.stringify(results, null, 2));
   const s = results.widths;
-  console.log(JSON.stringify({ errors: Object.fromEntries(Object.entries(s).map(([w, r]) => [w, { console: r.console, pageErrors: r.pageErrors, external: r.external, failed: r.failed, overflow: r.overflow, small: r.small.slice(0, 10), status: r.httpStatus, autoRun: r.autoRun, t365: r.timing365WithRender, t1000: r.timingTo1000EngineOnly, det: r.determinism, fast: r.fastRun, jump: r.detailJump, closed: r.detailClosed, rules: r.rulesHasValues, uiSeed: r.uiSeed, labelAfterReset: r.runLabelAfterReset }])), fresh: results.freshLoadHash365 }, null, 1));
+  console.log(JSON.stringify({ errors: Object.fromEntries(Object.entries(s).map(([w, r]) => [w, { console: r.console, pageErrors: r.pageErrors, external: r.external, failed: r.failed, overflow: r.overflow, small: r.small.slice(0, 10), status: r.httpStatus, autoRun: r.autoRun, t365: r.timing365WithRender, t1000: r.timingTo1000EngineOnly, det: r.determinism, fast: r.fastRun, jump: r.detailJump, closed: r.detailClosed, rules: r.rulesHasValues, uiSeed: r.uiSeed, labelAfterReset: r.runLabelAfterReset, fullPop: r.fullPopSpeed }])), fresh: results.freshLoadHash365 }, null, 1));
   if (results.widths[375].sample) {
     const rows = results.widths[375].sample;
     fs.writeFileSync(`/workspace/micro-society/qa/sample-${TAG}.json`, JSON.stringify(rows, null, 2));
-    const cols = ['day', 'alive', 'dead', 'births', 'gini', 'totalWealth', 'totalMoney', 'pool', 'emergency', 'barter', 'foodEaten', 'foodProduced', 'foodSpoiled', 'goodsUsed', 'coop', 'conflict', 'share', 'trades', 'foodPrice', 'goodsPrice', 'friends', 'enemies'];
+    const cols = ['day', 'alive', 'dead', 'births', 'gini', 'totalWealth', 'totalMoney', 'pool', 'medFund', 'emergency', 'barter', 'sick', 'heal', 'idle', 'foodEaten', 'foodProduced', 'foodSpoiled', 'goodsUsed', 'coop', 'conflict', 'share', 'trades', 'foodPrice', 'goodsPrice', 'friends', 'enemies'];
     fs.writeFileSync(`/workspace/micro-society/qa/sample-${TAG}.csv`, cols.join(',') + '\n' + rows.map(r => cols.map(c => typeof r[c] === 'number' && !Number.isInteger(r[c]) ? r[c].toFixed(4) : r[c]).join(',')).join('\n') + '\n');
   }
 })().catch(e => { console.error('QA FAILED', e); process.exit(1); });
