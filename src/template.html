@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f1ea">
+<title>微型社会模拟器</title>
+<link rel="icon" href="data:,">
+<style>
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#f4f1ea;color:#2b2a27;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;font-size:15px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:12px 12px calc(24px + env(safe-area-inset-bottom))}
+h1{font-size:21px;margin:4px 0 2px}
+.sub{color:#77736a;font-size:13px;margin:0 0 10px}
+.card{background:#fff;border-radius:14px;padding:12px;margin:10px 0;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+button,select,input{font:inherit;color:inherit}
+button{min-height:44px;min-width:44px;border:0;border-radius:11px;padding:0 12px;background:#e9e4d8;cursor:pointer;touch-action:manipulation}
+button.primary{background:#2f6f5e;color:#fff}
+button.warn{background:#f1d9d2;color:#8a3324}
+button:active{filter:brightness(.92)}
+select,input{min-height:44px;border:1px solid #d6d0c3;border-radius:11px;padding:0 10px;background:#fff;max-width:100%}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctrl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ctrl button{width:100%}
+.seedrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:8px;align-items:center;margin-top:8px}
+.seedrow input{width:100%}
+.speedrow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:center;margin-top:8px}
+.daybar{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.day{font-size:26px;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.stat{background:#f7f5ef;border-radius:10px;padding:6px 4px;text-align:center;min-width:0}
+.stat b{display:block;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stat span{font-size:11.5px;color:#77736a}
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;position:sticky;top:0;z-index:5;background:#f4f1ea;padding:6px 0}
+.tabs button{width:100%;padding:0 4px}
+.tabs button.on{background:#2f6f5e;color:#fff}
+.chart{margin:4px 0 14px}
+.chart h3{font-size:15px;margin:0 0 2px}
+.chart p{font-size:12px;color:#77736a;margin:0 0 4px}
+canvas{display:block;width:100%;height:190px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:#55524b}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.plist{display:flex;flex-direction:column;gap:6px}
+.person{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;text-align:left;width:100%;min-height:52px;background:#f7f5ef;padding:6px 10px}
+.person .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.person .meta{font-size:12px;color:#77736a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.person .w{font-variant-numeric:tabular-nums;text-align:right;font-size:13px}
+.person.dead{opacity:.5}
+.logl{list-style:none;margin:0;padding:0}
+.logl li{padding:6px 0;border-bottom:1px solid #eee8db;font-size:13.5px;word-break:break-all}
+.tag{display:inline-block;font-size:11px;border-radius:6px;padding:0 6px;margin-right:6px;color:#fff;vertical-align:1px}
+.rules h3{font-size:16px;margin:14px 0 4px}
+.rules ul{padding-left:20px;margin:4px 0}
+.rules li{margin:3px 0}
+.rules code{background:#f1ede3;border-radius:4px;padding:0 4px;font-size:13px;word-break:break-all}
+.rules table{border-collapse:collapse;width:100%;font-size:13px}
+.rules td,.rules th{border:1px solid #e3ddcf;padding:4px;text-align:left}
+pre{white-space:pre-wrap;word-break:break-all;font-size:11.5px;background:#f7f5ef;padding:8px;border-radius:8px;max-height:360px;overflow:auto}
+details summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:600}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:20;align-items:flex-end;justify-content:center}
+.sheet.show{display:flex}
+.panel{background:#fff;width:100%;max-width:760px;max-height:86vh;overflow-y:auto;overflow-x:hidden;border-radius:18px 18px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom))}
+.phead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.phead h2{margin:0;font-size:20px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar{height:9px;background:#eee8db;border-radius:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:#2f6f5e}
+.kv{display:grid;grid-template-columns:5.5em minmax(0,1fr) 3.2em;gap:6px;align-items:center;font-size:13.5px;margin:4px 0}
+.kv span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;font-size:13.5px}
+.grid2 div{background:#f7f5ef;border-radius:8px;padding:6px 8px;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font-size:13.5px;padding:0 10px}
+.muted{color:#77736a;font-size:13px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>微型社会模拟器</h1>
+  <p class="sub">100 位虚拟居民，在本地浏览器里自己干活、交易、合作、吵架、交朋友。所有随机都来自下面的「种子」，同一个种子结果完全一样。</p>
+
+  <div class="card">
+    <div class="daybar"><div class="day" id="dayLabel">第 0 天</div><div class="muted" id="perfLabel"></div></div>
+    <div class="ctrl" style="margin-top:8px">
+      <button class="primary" id="btnStep">前进 1 天</button>
+      <button id="btnRun">▶ 自动运行</button>
+      <button id="btnStep30">前进 30 天</button>
+    </div>
+    <div class="speedrow">
+      <label for="speed" class="muted">速度</label>
+      <select id="speed">
+        <option value="1">每秒 1 天</option>
+        <option value="4" selected>每秒 4 天</option>
+        <option value="15">每秒 15 天</option>
+        <option value="60">每秒 60 天（快进）</option>
+      </select>
+    </div>
+    <div class="seedrow">
+      <label for="seedInput" class="muted">种子</label>
+      <input id="seedInput" type="number" inputmode="numeric" min="0" max="4294967295">
+      <button id="btnRandSeed" aria-label="换一个随机种子">🎲</button>
+      <button class="warn" id="btnReset">重置</button>
+    </div>
+    <p class="muted" style="margin:6px 0 0">改种子后点「重置」生效。当前状态指纹：<code id="hashLabel"></code></p>
+  </div>
+
+  <div class="card">
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button data-tab="charts" class="on">图表</button>
+    <button data-tab="people">居民</button>
+    <button data-tab="log">今日事件</button>
+    <button data-tab="rules">规则说明</button>
+  </div>
+
+  <section class="card" id="tab-charts">
+    <div class="chart"><h3>财富分布（直方图）</h3><p>横轴：财富区间（元，财富 = 现金 + 食物×食物价 + 物品×物品价）；纵轴：人数</p><canvas id="cHist"></canvas></div>
+    <div class="chart"><h3>贫富差距：基尼系数</h3><p>0 = 人人一样多，1 = 一个人拥有全部。按天记录。</p><canvas id="cGini"></canvas></div>
+    <div class="chart"><h3>人口</h3><div class="legend" id="lgPop"></div><canvas id="cPop"></canvas></div>
+    <div class="chart"><h3>资源消耗（每天）</h3><div class="legend" id="lgRes"></div><canvas id="cRes"></canvas></div>
+    <div class="chart"><h3>合作与冲突（每天次数）</h3><div class="legend" id="lgSoc"></div><canvas id="cSoc"></canvas></div>
+    <div class="chart"><h3>市场价格</h3><div class="legend" id="lgPrice"></div><canvas id="cPrice"></canvas></div>
+  </section>
+
+  <section class="card hide" id="tab-people">
+    <div class="row" style="margin-bottom:8px">
+      <label for="sortSel" class="muted">排序</label>
+      <select id="sortSel" style="flex:1">
+        <option value="wealth">按财富（高→低）</option>
+        <option value="poor">按财富（低→高）</option>
+        <option value="health">按健康（低→高）</option>
+        <option value="friends">按朋友数</option>
+        <option value="id">按编号</option>
+      </select>
+      <select id="filterSel" style="flex:1">
+        <option value="alive">只看在世</option>
+        <option value="all">全部（含去世）</option>
+        <option value="dead">只看去世</option>
+      </select>
+    </div>
+    <p class="muted" style="margin:0 0 6px">点任意居民查看详情。</p>
+    <div class="plist" id="plist"></div>
+  </section>
+
+  <section class="card hide" id="tab-log">
+    <p class="muted" id="logHead" style="margin:0 0 6px"></p>
+    <div class="row" style="margin-bottom:6px"><select id="logFilter" style="flex:1">
+      <option value="all">全部类型</option><option value="trade">交易</option><option value="coop">合作</option><option value="share">分享</option>
+      <option value="conflict">冲突</option><option value="rel">关系</option><option value="heal">治疗</option><option value="welfare">救济</option>
+      <option value="birth">出生</option><option value="death">死亡</option><option value="job">职业</option></select></div>
+    <ul class="logl" id="logList"></ul>
+  </section>
+
+  <section class="card hide rules" id="tab-rules"></section>
+</div>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="panel" id="panel"></div>
+</div>
+
+<script>
+/*__SIM__*/
+/*__UI__*/
+</script>
+</body>
+</html>
