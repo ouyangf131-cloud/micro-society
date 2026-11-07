@@ -16,31 +16,31 @@
    },
    "t365": {
     "days": 365,
-    "totalMs": 668.1000000000931,
-    "maxDayMsInclRender": 4.399999999906868,
-    "hash": "a0ccbce2",
+    "totalMs": 2359.100000000559,
+    "maxDayMsInclRender": 16.200000000186265,
+    "hash": "84f5081f",
     "day": 365
    },
    "t1000": {
     "days": 635,
-    "engineOnlyMs": 361.89999999990687,
+    "engineOnlyMs": 678.6999999992549,
     "day": 1000,
-    "hash": "e7f47e52",
-    "alive": 75
+    "hash": "71940bf4",
+    "alive": 114
    },
    "det": {
     "seedA": 20261107,
-    "hashA1": "a0ccbce2",
-    "hashA2": "a0ccbce2",
+    "hashA1": "84f5081f",
+    "hashA2": "84f5081f",
     "same": true,
     "seedB": 12345,
-    "hashB": "2d332ada",
+    "hashB": "7562485d",
     "differs": true
    },
    "fast": {
     "day": 1120
    },
-   "jump": "林远 #84",
+   "jump": "张一 #43",
    "closed": true,
    "rules": [
     [
@@ -67,7 +67,11 @@
    "uiSeed": {
     "seed": 12345,
     "day": 3,
-    "hash": "078a46c6"
+    "hash": "4bdc724d"
+   },
+   "labelAfterReset": {
+    "day": 0,
+    "label": "▶ 自动运行"
    }
   },
   "430": {
@@ -86,31 +90,31 @@
    },
    "t365": {
     "days": 365,
-    "totalMs": 708.5999999996275,
-    "maxDayMsInclRender": 3.2999999998137355,
-    "hash": "a0ccbce2",
+    "totalMs": 2386.2000000001863,
+    "maxDayMsInclRender": 14.200000000186265,
+    "hash": "84f5081f",
     "day": 365
    },
    "t1000": {
     "days": 635,
-    "engineOnlyMs": 362.20000000018626,
+    "engineOnlyMs": 673.5999999996275,
     "day": 1000,
-    "hash": "e7f47e52",
-    "alive": 75
+    "hash": "71940bf4",
+    "alive": 114
    },
    "det": {
     "seedA": 20261107,
-    "hashA1": "a0ccbce2",
-    "hashA2": "a0ccbce2",
+    "hashA1": "84f5081f",
+    "hashA2": "84f5081f",
     "same": true,
     "seedB": 12345,
-    "hashB": "2d332ada",
+    "hashB": "7562485d",
     "differs": true
    },
    "fast": {
-    "day": 1120
+    "day": 1123
    },
-   "jump": "林远 #84",
+   "jump": "张一 #43",
    "closed": true,
    "rules": [
     [
@@ -137,9 +141,13 @@
    "uiSeed": {
     "seed": 12345,
     "day": 3,
-    "hash": "078a46c6"
+    "hash": "4bdc724d"
+   },
+   "labelAfterReset": {
+    "day": 0,
+    "label": "▶ 自动运行"
    }
   }
  },
- "fresh": "a0ccbce2"
+ "fresh": "84f5081f"
 }
