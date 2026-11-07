@@ -1,0 +1,495 @@
+{
+  "url": "https://ouyangf131-cloud.github.io/micro-society/",
+  "tag": "deployed",
+  "startedAt": "Sat Nov 07 2026 18:57:15 GMT+0800 (China Standard Time)",
+  "widths": {
+    "375": {
+      "console": [],
+      "pageErrors": [],
+      "external": [],
+      "failed": [],
+      "overflow": [],
+      "small": [],
+      "checks": [
+        {
+          "label": "initial",
+          "scroll": {
+            "sw": 375,
+            "cw": 375,
+            "bw": 375
+          },
+          "controls": 11,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "log-day1",
+          "scroll": {
+            "sw": 375,
+            "cw": 375,
+            "bw": 375
+          },
+          "controls": 12,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "charts-day31",
+          "scroll": {
+            "sw": 375,
+            "cw": 375,
+            "bw": 375
+          },
+          "controls": 11,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "people",
+          "scroll": {
+            "sw": 375,
+            "cw": 375,
+            "bw": 375
+          },
+          "controls": 106,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "detail",
+          "scroll": {
+            "sw": 375,
+            "cw": 375,
+            "bw": 375
+          },
+          "controls": 118,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "log",
+          "scroll": {
+            "sw": 375,
+            "cw": 375,
+            "bw": 375
+          },
+          "controls": 12,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "rules",
+          "scroll": {
+            "sw": 375,
+            "cw": 375,
+            "bw": 375
+          },
+          "controls": 12,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "charts-day365",
+          "scroll": {
+            "sw": 375,
+            "cw": 375,
+            "bw": 375
+          },
+          "controls": 11,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "final",
+          "scroll": {
+            "sw": 375,
+            "cw": 375,
+            "bw": 375
+          },
+          "controls": 11,
+          "minW": 44,
+          "minH": 44
+        }
+      ],
+      "httpStatus": 200,
+      "afterStep1": 1,
+      "after30": 31,
+      "autoRun": {
+        "dayAfterRun": 37,
+        "dayAfter800msPaused": 37,
+        "advanced": true,
+        "pausedStable": true
+      },
+      "detailJump": "林远 #84",
+      "detailClosed": true,
+      "rulesHasValues": [
+        [
+          "100",
+          true
+        ],
+        [
+          "30",
+          true
+        ],
+        [
+          "10%",
+          true
+        ],
+        [
+          "15",
+          true
+        ],
+        [
+          "100",
+          true
+        ]
+      ],
+      "timing365WithRender": {
+        "days": 365,
+        "totalMs": 668.1000000000931,
+        "maxDayMsInclRender": 4.399999999906868,
+        "hash": "a0ccbce2",
+        "day": 365
+      },
+      "timingTo1000EngineOnly": {
+        "days": 635,
+        "engineOnlyMs": 361.89999999990687,
+        "day": 1000,
+        "hash": "e7f47e52",
+        "alive": 75
+      },
+      "fastRun": {
+        "day": 1120
+      },
+      "determinism": {
+        "seedA": 20261107,
+        "hashA1": "a0ccbce2",
+        "hashA2": "a0ccbce2",
+        "same": true,
+        "seedB": 12345,
+        "hashB": "2d332ada",
+        "differs": true
+      },
+      "uiSeed": {
+        "seed": 12345,
+        "day": 3,
+        "hash": "078a46c6"
+      },
+      "sample": [
+        {
+          "day": 0,
+          "alive": 100,
+          "dead": 0,
+          "births": 0,
+          "gini": 0.24260670103702675,
+          "totalWealth": 9296.769999999999,
+          "totalMoney": 5907.770000000001,
+          "foodStock": 679,
+          "goodsStock": 338,
+          "foodEaten": 0,
+          "goodsUsed": 0,
+          "foodProduced": 0,
+          "goodsProduced": 0,
+          "foodSpoiled": 0,
+          "coop": 0,
+          "conflict": 0,
+          "share": 0,
+          "trades": 0,
+          "heal": 0,
+          "taxed": 0,
+          "aided": 0,
+          "foodPrice": 3,
+          "goodsPrice": 4,
+          "friends": 99,
+          "enemies": 0
+        },
+        {
+          "day": 30,
+          "alive": 96,
+          "dead": 5,
+          "births": 1,
+          "gini": 0.43255622161218965,
+          "totalWealth": 10214.20091338596,
+          "totalMoney": 5907.769999999997,
+          "foodStock": 449.1330832424765,
+          "goodsStock": 199.14549670191246,
+          "foodEaten": 131,
+          "goodsUsed": 78,
+          "foodProduced": 157.08874228670396,
+          "goodsProduced": 80.31297004473328,
+          "foodSpoiled": 13.890713914715771,
+          "coop": 124,
+          "conflict": 16,
+          "share": 11,
+          "trades": 88,
+          "heal": 3,
+          "taxed": 33.03790072658938,
+          "aided": 35,
+          "foodPrice": 6.296238413222105,
+          "goodsPrice": 7.424631570951306,
+          "friends": 105,
+          "enemies": 29
+        },
+        {
+          "day": 100,
+          "alive": 88,
+          "dead": 20,
+          "births": 8,
+          "gini": 0.5366782981427607,
+          "totalWealth": 9344.542280097954,
+          "totalMoney": 5907.769999999994,
+          "foodStock": 747.7007583390505,
+          "goodsStock": 667.6128341478272,
+          "foodEaten": 112,
+          "goodsUsed": 79,
+          "foodProduced": 141.30726837854078,
+          "goodsProduced": 82.43647532074611,
+          "foodSpoiled": 23.124765721826307,
+          "coop": 119,
+          "conflict": 7,
+          "share": 5,
+          "trades": 75,
+          "heal": 0,
+          "taxed": 54.18258009308828,
+          "aided": 44,
+          "foodPrice": 3.463830480459987,
+          "goodsPrice": 1.2684950914418645,
+          "friends": 159,
+          "enemies": 37
+        },
+        {
+          "day": 365,
+          "alive": 63,
+          "dead": 53,
+          "births": 16,
+          "gini": 0.32500784679801464,
+          "totalWealth": 6820.907359658128,
+          "totalMoney": 5907.769999999986,
+          "foodStock": 747.8090639632917,
+          "goodsStock": 1078.4656553529906,
+          "foodEaten": 100,
+          "goodsUsed": 47,
+          "foodProduced": 121.5421886149537,
+          "goodsProduced": 50.375098341204854,
+          "foodSpoiled": 23.128115380307978,
+          "coop": 85,
+          "conflict": 2,
+          "share": 0,
+          "trades": 58,
+          "heal": 0,
+          "taxed": 27.773351288995585,
+          "aided": 0,
+          "foodPrice": 0.5,
+          "goodsPrice": 0.5,
+          "friends": 559,
+          "enemies": 18
+        },
+        {
+          "day": 1000,
+          "alive": 75,
+          "dead": 53,
+          "births": 28,
+          "gini": 0.6056794666422491,
+          "totalWealth": 13699.746362787198,
+          "totalMoney": 5907.769999999931,
+          "foodStock": 696.301357425963,
+          "goodsStock": 14859.588650877013,
+          "foodEaten": 107,
+          "goodsUsed": 47,
+          "foodProduced": 137.76792346223039,
+          "goodsProduced": 72.92143159416459,
+          "foodSpoiled": 21.535093528638026,
+          "coop": 87,
+          "conflict": 0,
+          "share": 0,
+          "trades": 61,
+          "heal": 0,
+          "taxed": 26.478964283047244,
+          "aided": 0,
+          "foodPrice": 0.5201512728449278,
+          "goodsPrice": 0.5,
+          "friends": 942,
+          "enemies": 20
+        }
+      ]
+    },
+    "430": {
+      "console": [],
+      "pageErrors": [],
+      "external": [],
+      "failed": [],
+      "overflow": [],
+      "small": [],
+      "checks": [
+        {
+          "label": "initial",
+          "scroll": {
+            "sw": 430,
+            "cw": 430,
+            "bw": 430
+          },
+          "controls": 11,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "log-day1",
+          "scroll": {
+            "sw": 430,
+            "cw": 430,
+            "bw": 430
+          },
+          "controls": 12,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "charts-day31",
+          "scroll": {
+            "sw": 430,
+            "cw": 430,
+            "bw": 430
+          },
+          "controls": 11,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "people",
+          "scroll": {
+            "sw": 430,
+            "cw": 430,
+            "bw": 430
+          },
+          "controls": 106,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "detail",
+          "scroll": {
+            "sw": 430,
+            "cw": 430,
+            "bw": 430
+          },
+          "controls": 118,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "log",
+          "scroll": {
+            "sw": 430,
+            "cw": 430,
+            "bw": 430
+          },
+          "controls": 12,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "rules",
+          "scroll": {
+            "sw": 430,
+            "cw": 430,
+            "bw": 430
+          },
+          "controls": 12,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "charts-day365",
+          "scroll": {
+            "sw": 430,
+            "cw": 430,
+            "bw": 430
+          },
+          "controls": 11,
+          "minW": 44,
+          "minH": 44
+        },
+        {
+          "label": "final",
+          "scroll": {
+            "sw": 430,
+            "cw": 430,
+            "bw": 430
+          },
+          "controls": 11,
+          "minW": 44,
+          "minH": 44
+        }
+      ],
+      "httpStatus": 200,
+      "afterStep1": 1,
+      "after30": 31,
+      "autoRun": {
+        "dayAfterRun": 37,
+        "dayAfter800msPaused": 37,
+        "advanced": true,
+        "pausedStable": true
+      },
+      "detailJump": "林远 #84",
+      "detailClosed": true,
+      "rulesHasValues": [
+        [
+          "100",
+          true
+        ],
+        [
+          "30",
+          true
+        ],
+        [
+          "10%",
+          true
+        ],
+        [
+          "15",
+          true
+        ],
+        [
+          "100",
+          true
+        ]
+      ],
+      "timing365WithRender": {
+        "days": 365,
+        "totalMs": 708.5999999996275,
+        "maxDayMsInclRender": 3.2999999998137355,
+        "hash": "a0ccbce2",
+        "day": 365
+      },
+      "timingTo1000EngineOnly": {
+        "days": 635,
+        "engineOnlyMs": 362.20000000018626,
+        "day": 1000,
+        "hash": "e7f47e52",
+        "alive": 75
+      },
+      "fastRun": {
+        "day": 1120
+      },
+      "determinism": {
+        "seedA": 20261107,
+        "hashA1": "a0ccbce2",
+        "hashA2": "a0ccbce2",
+        "same": true,
+        "seedB": 12345,
+        "hashB": "2d332ada",
+        "differs": true
+      },
+      "uiSeed": {
+        "seed": 12345,
+        "day": 3,
+        "hash": "078a46c6"
+      }
+    }
+  },
+  "determinism": null,
+  "timing": {},
+  "sample": null,
+  "freshLoadHash365": "a0ccbce2",
+  "finishedAt": "Sat Nov 07 2026 18:57:33 GMT+0800 (China Standard Time)"
+}

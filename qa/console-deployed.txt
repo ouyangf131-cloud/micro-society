@@ -1,0 +1,145 @@
+{
+ "errors": {
+  "375": {
+   "console": [],
+   "pageErrors": [],
+   "external": [],
+   "failed": [],
+   "overflow": [],
+   "small": [],
+   "status": 200,
+   "autoRun": {
+    "dayAfterRun": 37,
+    "dayAfter800msPaused": 37,
+    "advanced": true,
+    "pausedStable": true
+   },
+   "t365": {
+    "days": 365,
+    "totalMs": 668.1000000000931,
+    "maxDayMsInclRender": 4.399999999906868,
+    "hash": "a0ccbce2",
+    "day": 365
+   },
+   "t1000": {
+    "days": 635,
+    "engineOnlyMs": 361.89999999990687,
+    "day": 1000,
+    "hash": "e7f47e52",
+    "alive": 75
+   },
+   "det": {
+    "seedA": 20261107,
+    "hashA1": "a0ccbce2",
+    "hashA2": "a0ccbce2",
+    "same": true,
+    "seedB": 12345,
+    "hashB": "2d332ada",
+    "differs": true
+   },
+   "fast": {
+    "day": 1120
+   },
+   "jump": "林远 #84",
+   "closed": true,
+   "rules": [
+    [
+     "100",
+     true
+    ],
+    [
+     "30",
+     true
+    ],
+    [
+     "10%",
+     true
+    ],
+    [
+     "15",
+     true
+    ],
+    [
+     "100",
+     true
+    ]
+   ],
+   "uiSeed": {
+    "seed": 12345,
+    "day": 3,
+    "hash": "078a46c6"
+   }
+  },
+  "430": {
+   "console": [],
+   "pageErrors": [],
+   "external": [],
+   "failed": [],
+   "overflow": [],
+   "small": [],
+   "status": 200,
+   "autoRun": {
+    "dayAfterRun": 37,
+    "dayAfter800msPaused": 37,
+    "advanced": true,
+    "pausedStable": true
+   },
+   "t365": {
+    "days": 365,
+    "totalMs": 708.5999999996275,
+    "maxDayMsInclRender": 3.2999999998137355,
+    "hash": "a0ccbce2",
+    "day": 365
+   },
+   "t1000": {
+    "days": 635,
+    "engineOnlyMs": 362.20000000018626,
+    "day": 1000,
+    "hash": "e7f47e52",
+    "alive": 75
+   },
+   "det": {
+    "seedA": 20261107,
+    "hashA1": "a0ccbce2",
+    "hashA2": "a0ccbce2",
+    "same": true,
+    "seedB": 12345,
+    "hashB": "2d332ada",
+    "differs": true
+   },
+   "fast": {
+    "day": 1120
+   },
+   "jump": "林远 #84",
+   "closed": true,
+   "rules": [
+    [
+     "100",
+     true
+    ],
+    [
+     "30",
+     true
+    ],
+    [
+     "10%",
+     true
+    ],
+    [
+     "15",
+     true
+    ],
+    [
+     "100",
+     true
+    ]
+   ],
+   "uiSeed": {
+    "seed": 12345,
+    "day": 3,
+    "hash": "078a46c6"
+   }
+  }
+ },
+ "fresh": "a0ccbce2"
+}
