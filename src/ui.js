@@ -9,13 +9,14 @@
   const TAGS = { trade: ['交易', '#4a78b5'], coop: ['合作', '#2f6f5e'], share: ['分享', '#5f9e6e'], conflict: ['冲突', '#c0563f'],
     rel: ['关系', '#8a62b0'], heal: ['治疗', '#3b8ea5'], welfare: ['救济', '#d79b2b'], birth: ['出生', '#e07a9a'], death: ['死亡', '#555'], job: ['职业', '#8b7a55'] };
 
-  let sim, timer = null, tab = 'charts', stepTimes = [];
+  let sim, timer = null, tab = 'charts', stepTimes = [], lastHashAt = 0;
   const params = new URLSearchParams(location.search);
   let seed = params.has('seed') && /^\d+$/.test(params.get('seed')) ? (Number(params.get('seed')) >>> 0) : C.defaultSeed;
 
   function reset(s) {
     stop();
     seed = s >>> 0; sim = createSim(seed); stepTimes = [];
+    $('btnRun').textContent = '▶ 自动运行';
     $('seedInput').value = seed;
     renderAll();
   }
@@ -39,7 +40,7 @@
     timer = setInterval(() => { if (aliveCount() === 0) { stop(); return; } stepDays(perTick); }, interval);
     $('btnRun').textContent = '⏸ 暂停';
   }
-  function stop() { if (timer) clearInterval(timer); timer = null; const b = $('btnRun'); if (b) b.textContent = sim && sim.S.day > 0 ? '▶ 继续运行' : '▶ 自动运行'; }
+  function stop() { const was = !!timer; if (timer) clearInterval(timer); timer = null; if (was && sim) $('hashLabel').textContent = sim.hash(); const b = $('btnRun'); if (b) b.textContent = sim && sim.S.day > 0 ? '▶ 继续运行' : '▶ 自动运行'; }
 
   // ---------- 渲染 ----------
   function renderAll() {
@@ -47,7 +48,9 @@
     $('dayLabel').textContent = '第 ' + S.day + ' 天';
     const avg = stepTimes.length ? stepTimes.reduce((a, b) => a + b, 0) / stepTimes.length : 0;
     $('perfLabel').textContent = stepTimes.length ? '每天计算约 ' + avg.toFixed(2) + ' 毫秒' : '';
-    $('hashLabel').textContent = sim.hash();
+    // 指纹覆盖全部状态，计算稍慢：自动运行时最多每秒更新一次，暂停或单步时立即更新
+    const now = performance.now();
+    if (!timer || now - lastHashAt > 1000) { $('hashLabel').textContent = sim.hash(); lastHashAt = now; }
     const st = [
       ['在世', h.alive], ['累计去世', h.dead], ['累计出生', h.births], ['基尼系数', h.gini.toFixed(3)],
       ['总财富', fmt(h.totalWealth)], ['今日合作', h.coop], ['今日冲突', h.conflict], ['今日分享', h.share],
@@ -195,7 +198,7 @@
 
   // ---------- 规则说明（由 CONFIG 生成） ----------
   function renderRules() {
-    const J = C.jobs, N = C.needs, W = C.work, M = C.market, SC = C.social, D = C.doctor, L = C.life, B = C.birth, Wf = C.welfare, JS = C.jobSwitch, I = C.init;
+    const J = C.jobs, N = C.needs, W = C.work, M = C.market, SC = C.social, D = C.doctor, L = C.life, B = C.birth, Wf = C.welfare, JS = C.jobSwitch, I = C.init, E = C.emergency;
     const jobRows = Object.keys(J).map(k => {
       const j = J[k];
       const what = j.product === 'food' ? '生产食物' : j.product === 'goods' ? '生产物品' : k === 'merchant' ? '市场抽成' : '给人治病收费';
@@ -208,7 +211,7 @@
 <ul>
 <li>开局 <b>${C.population}</b> 位居民；在世人数达到 <b>${C.maxPopulation}</b> 人后不再有新生儿。</li>
 <li>每位居民有：姓名、年龄、职业与技能熟练度、性格（善良、贪婪、攻击性、社交性，各 0–100）、现金、食物、物品、饱食度、体力、健康，以及和别人的关系分（−100 到 +100）。</li>
-<li>每过一天，按顺序发生：<b>公共救济 → 工作 → 看病 → 食物市场 → 物品市场 → 社交（分享/合作/冲突/闲聊） → 喂孩子 → 吃饭和休息 → 死亡判定 → 出生 → 年龄增长 → 转行（每 ${JS.every} 天） → 关系自然淡化</b>。</li>
+<li>每过一天，按顺序发生：<b>公共救济 → 工作 → 看病 → 食物市场 → 物品市场 → 社交（分享/合作/冲突/闲聊） → 喂孩子 → 断粮者紧急买粮 → 吃饭和休息 → 死亡判定 → 出生 → 年龄增长 → 转行（每 ${JS.every} 天） → 关系自然淡化</b>。</li>
 <li>财富 = 现金 + 食物 × 当前食物价 + 物品 × 当前物品价。</li>
 </ul>
 <h3>2. 初始状态</h3>
@@ -224,25 +227,30 @@
 <li>满 ${W.adultAge} 岁才工作。体力 ≥ ${W.minEnergy} 且健康 ≥ ${W.minHealth} 时当天会去工作，消耗 ${W.energyCost} 体力。</li>
 <li>产量 = 基础产量 × (${W.skillFactorBase} + 技能) × (${1 - W.healthWeight} + ${W.healthWeight} × 健康/100) × 合作加成 × 运气。合作加成：前一天和人合作过则 ×${1 + W.coopBoost}（用一次就消失）。</li>
 <li>每工作一天技能 +${pct(W.skillGain)}，最高 100%。</li>
+<li><b>积压就换活</b>：农夫、渔夫、工匠如果自己手上的本职产品超过 ${W.overStock}，当天改去帮忙做另一种东西（产粮的去做物品，工匠去种粮），产量按对应职业（工匠 / 农夫）基础产量的 ${pct(W.helperRate)} 计算。如果食物和物品都超过 ${W.overStock}，当天就歇着（不耗体力、不长技能）。</li>
 <li>商人不生产东西：只要当天有商人工作，所有市场成交都要额外付 ${pct(M.merchantFee)} 手续费，平分给当天工作的商人。</li>
 <li>医生见第 6 条。</li>
 </ul>
 <h3>4. 生存需求（吃饭、休息、健康）</h3>
 <ul>
-<li>每天饱食度 −${N.satietyDecay}。吃 1 份食物饱食度 +${N.satietyPerFood}，一天最多吃 ${N.maxFoodPerDay} 份，吃到 ${N.eatUntil} 以上就不吃了。</li>
+<li>每天饱食度 −${N.satietyDecay}。吃 1 份食物饱食度 +${N.satietyPerFood}（不满 1 份的零头也能吃，按比例加），一天最多吃 ${N.maxFoodPerDay} 份，吃到 ${N.eatUntil} 以上就不吃了。</li>
 <li>成年人每天消耗 ${N.goodsPerDay} 件物品（柴火、工具等）。休息恢复体力 = ${N.restBase} + （用了物品再 +${N.restGoodsBonus}） + （饱食度 > ${N.fedThreshold} 再 +${N.restFedBonus}），体力最高 100。</li>
 <li>饱食度降到 0：健康 −${N.starveHealthLoss}/天。体力低于 ${N.exhaustedEnergy}：健康 −${N.exhaustedHealthLoss}/天。饱食度 > ${N.regenSatiety} 且体力 > ${N.regenEnergy}：健康 +${N.healthRegen}/天。</li>
 <li>存着的食物每天腐坏 ${pct(C.spoil.foodRate)}；物品不会坏。</li>
 </ul>
 <h3>5. 市场交易（自主买卖）</h3>
 <ul>
-<li>食物：手上少于 ${M.foodTarget} 份的成年人想买到 ${M.foodTarget} 份；多于 ${M.foodSellAbove} 份的人把超出部分拿去卖。物品：少于 ${M.goodsTarget} 件想买，多于 ${M.goodsSellAbove} 件的卖。</li>
+<li>食物：手上少于 ${M.foodTarget} 份的成年人想买到 ${M.foodTarget} 份。物品：少于 ${M.goodsTarget} 件想买。</li>
+<li><b>卖出门槛跟着价格变</b>：门槛 = 四舍五入(基础门槛 × 开局价 ÷ 当前价)，再限制在 ${M.sellAboveMin} 到 基础门槛×${M.sellAboveMaxMult} 之间。食物基础门槛 ${M.foodSellAbove} 份（范围 ${M.sellAboveMin}–${M.foodSellAbove * M.sellAboveMaxMult}），物品 ${M.goodsSellAbove} 件（范围 ${M.sellAboveMin}–${M.goodsSellAbove * M.sellAboveMaxMult}）。也就是：东西越贵，大家越愿意把手上的拿出来卖；越便宜越舍不得卖。手上超过门槛的部分才卖，每人每天每种最多拿出 ${M.maxOfferPerDay} 份/件。</li>
 <li>卖家报价 = 当前市价 × (1 + ${M.greedMarkup} × 贪婪度)，越贪越贵。买家随机排队，每人从最便宜的卖家开始买，钱不够就买不了。</li>
 <li>每成交一笔，买卖双方关系 +${M.tradeRelGain}。</li>
-<li>价格随供需变化：新价格 = 旧价格 × (1 + ${M.priceAdjust} × (想买的总量 − 拿出来卖的总量) ÷ (两者之和))，限制在 ${M.priceMin}–${M.priceMax} 元之间。开局食物 ${M.foodPrice0} 元/份，物品 ${M.goodsPrice0} 元/件。</li>
+<li>价格随供需变化：如果拿出来卖的全部卖光了还有人没买到，价格 × (1 + ${M.priceUp} × 没买到的量 ÷ 想买的总量)，也就是缺得越多涨得越快，一天最多涨 ${pct(M.priceUp)}；如果有没卖掉的，价格 × (1 − ${M.priceDown} × 没卖掉的量 ÷ 拿出来卖的总量)。价格限制在 ${M.priceMin}–${M.priceMax} 元之间。开局食物 ${M.foodPrice0} 元/份，物品 ${M.goodsPrice0} 元/件。</li>
+<li><b>断粮紧急买粮</b>：喂完孩子之后，任何手上食物少于 ${E.foodBelow} 份的人（包括孩子，最饿的先买）可以向食物至少 ${E.sellerReserve + 1} 份的成年人（存粮最多的先卖）紧急买最多 ${E.buyQty} 份，卖家至少留 ${E.sellerReserve} 份。紧急价 = 当前食物价 × ${1 + E.markup}。钱不够时，可以用物品按“紧急价 ÷ 当前物品价”件换 1 份。</li>
+<li>如果断粮的成年人这样还一份粮都弄不到，而且不是产粮职业（农夫、渔夫），就立刻改行做${J[E.switchJob].name}自己种粮，技能从 ${pct(E.switchSkill)} 开始。</li>
 </ul>
 <h3>6. 医生</h3>
-<ul><li>每位当天工作的医生最多治疗 ${D.maxPatients} 位健康低于 ${D.healBelow} 的人（最严重的优先，医生不给自己治），每次健康 +${D.healAmount}，收费 ${D.fee} 元。病人付不起时，只有善良度高于 ${pct(D.freeKind)} 的医生会免费治。</li></ul>
+<ul><li>健康低于 ${D.healBelow} 的人按病情从重到轻排队。医生一个接一个看队列，每位当天工作的医生最多治疗 ${D.maxPatients} 人，医生不给自己治。每次健康 +${D.healAmount}，收费 ${D.fee} 元。</li>
+<li>病人付不起钱时，只有善良度高于 ${pct(D.freeKind)} 的医生会免费治；不肯免费治的医生会跳过他，但他<b>留在队列里</b>，后面的医生还能看到他。</li></ul>
 <h3>7. 社交：分享、合作、冲突、关系</h3>
 <ul>
 <li>每位成年人每天主动见 ${SC.meetBase} + 四舍五入(社交性 × ${SC.meetExtra}) 个人。有 ${pct(SC.friendPick)} 的机会优先找朋友，否则随机找人。</li>
@@ -258,28 +266,32 @@
 <li>关系分 ≥ ${SC.friendThreshold} 算朋友，≤ ${SC.enemyThreshold} 算仇人。跨过这些线时会在事件里记录“成为朋友 / 友谊破裂 / 结仇”。每天所有关系分 × ${SC.relDecay}（慢慢淡化；绝对值小于 ${SC.relForget} 时就忘了对方，关系删除）。</li>
 </ul>
 <h3>8. 公共救济（资源再分配）</h3>
-<ul><li>${Wf.enabled ? '开启。' : '关闭。'}每天开始时，成年人现金超过 ${Wf.taxThreshold} 元的部分收 ${pct(Wf.taxRate)} 的税，全部平均发给现金少于 ${Wf.povertyLine} 元的成年人（如果没有穷人，就平均发给所有成年人）。</li></ul>
+<ul><li>${Wf.enabled ? '开启。' : '关闭（无人继承的现金会一直留在救济池里）。'}每天开始时，成年人现金超过 ${Wf.taxThreshold} 元的部分收 ${pct(Wf.taxRate)} 的税。税款加上“救济池”里的钱（来自无人继承的遗产，见第 9 条）全部平均发给现金少于 ${Wf.povertyLine} 元的成年人；如果没有穷人，就平均发给所有成年人。</li>
+<li>所以全社会的现金总数（所有人的现金 + 救济池）永远不变，钱只会在人和人之间转移。</li></ul>
 <h3>9. 死亡与继承</h3>
 <ul>
 <li>健康降到 0 就会去世：当时饱食度为 0 记作“饥饿”，否则记作“伤病”。</li>
 <li>超过 ${L.oldAge} 岁后，每天有 ${L.oldAgeRisk} × (年龄 − ${L.oldAge}) 的概率因年老去世。</li>
-<li>遗产（现金、食物、物品）先给在世的孩子，没有孩子就给关系分最高的人（必须大于 0），都没有则遗产散失。</li>
+<li>遗产（现金、食物、物品）先给在世的孩子，没有孩子就给关系分最高的人（必须大于 0）。都没有时，现金并入救济池（第 8 条），食物和物品散失。</li>
 </ul>
 <h3>10. 出生（可选规则，当前${B.enabled ? '开启' : '关闭'}）</h3>
 <ul>
 <li>两位 ${B.minAge}–${B.maxAge} 岁、关系分 ≥ ${B.partnerRel}、饱食度都 ≥ ${B.minSatiety}、两人现金合计 ≥ ${B.minMoney} 元的居民，每天有 ${pct(B.dailyChance)} 的概率生孩子；每人生育后要隔 ${B.cooldown} 天。</li>
 <li>父母各给孩子最多 ${B.giftEach} 元。孩子每项性格 = 父母平均值 + 随机（±${B.traitNoise / 2}，限制在 0–1），和父母关系分 ${B.parentRel}；出生时饱食度 ${B.babySatiety}、体力 ${B.babyEnergy}、健康 ${B.babyHealth}。</li>
-<li>孩子不工作也不参与社交，每天由父母（父母都不在了，就由一位食物最多的善良成年人）喂 ${L.childFoodPerDay} 份食物，${W.adultAge} 岁成年后做父母一方的职业。</li>
+<li>孩子不工作也不参与社交。每天由父母喂饭（父母都不在了，就由食物多于 ${L.carerMinFood} 份、存粮最多的一位成年人来喂）：把孩子的存粮补到 ${L.childFoodTarget} 份，每天最多给 ${L.childFoodPerDay} 份。孩子存粮超过 ${L.childFoodKeep} 份的部分会还给喂他的大人。</li>
+<li>为了在模拟时间里看到新一代，<b>童年被压缩</b>：孩子出生后 ${L.childhoodDays} 天就长到 ${W.adultAge} 岁成年，之后每天按 1/365 岁正常变老。成年后做父母一方的职业。</li>
 </ul>
 <h3>11. 转行</h3>
-<ul><li>每 ${JS.every} 天，统计过去这段时间各职业的平均收入；财富最低的 ${pct(JS.bottomShare)} 成年人改行去做平均收入最高的职业，技能重置为 ${pct(JS.newSkill)}。</li></ul>
+<ul><li>每 ${JS.every} 天，统计过去这段时间各职业的平均收入；财富最低的 ${pct(JS.bottomShare)} 成年人改行，技能重置为 ${pct(JS.newSkill)}。</li>
+<li>去哪一行：如果这段时间里至少 ${pct(JS.shortageShare)} 的天数食物“卖光了还有人买不到”，就只在产粮职业（农夫、渔夫）里挑平均收入最高的；否则如果物品经常这样缺，就去做工匠；都不缺时，去平均收入最高的职业。</li>
+<li>另见第 5 条：断粮又买不到粮的非产粮成年人会立刻改行做${J[E.switchJob].name}。</li></ul>
 <h3>12. 统计口径</h3>
 <ul>
 <li>基尼系数：把在世居民的财富从小到大排序，用标准公式 G = 2Σ(i·xᵢ)/(n·Σxᵢ) − (n+1)/n 计算（负财富按 0 算）。</li>
 <li>“今日事件”每天最多记录 ${C.limits.logPerDay} 条（超出部分只计数）；每位居民保留最近 ${C.limits.personalLog} 条经历；图表最多保留 ${C.limits.historyDays} 天历史。</li>
 </ul>
 <h3>13. 随机种子（可复现）</h3>
-<ul><li>所有随机数都由 mulberry32 伪随机算法从“种子”生成，不使用 Math.random。相同种子 + 相同操作 = 完全相同的结果（可以看页面上的“状态指纹”核对）。网址后面加 <code>?seed=数字</code> 也能指定种子。默认种子 ${C.defaultSeed}。</li></ul>
+<ul><li>所有随机数都由 mulberry32 伪随机算法从“种子”生成，不使用 Math.random。相同种子 + 相同操作 = 完全相同的结果。页面上的“状态指纹”覆盖全部状态：天数、随机数发生器的内部状态、价格、救济池、缺货天数、累计数，以及每位居民的所有字段（含每一条关系分），可以用它核对。网址后面加 <code>?seed=数字</code> 也能指定种子。默认种子 ${C.defaultSeed}。</li></ul>
 <details><summary>查看原始参数 CONFIG</summary><pre>${esc(JSON.stringify(C, null, 2))}</pre></details>`;
   }
 
