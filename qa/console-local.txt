@@ -16,14 +16,14 @@
    },
    "t365": {
     "days": 365,
-    "totalMs": 2460.7000000001863,
-    "maxDayMsInclRender": 16.09999999962747,
+    "totalMs": 2423.9000000003725,
+    "maxDayMsInclRender": 15.700000000186265,
     "hash": "6381c50e",
     "day": 365
    },
    "t1000": {
     "days": 635,
-    "engineOnlyMs": 737.5,
+    "engineOnlyMs": 725.2999999998137,
     "day": 1000,
     "hash": "c0f9d5fa",
     "alive": 121
@@ -78,17 +78,17 @@
      "cpuThrottle": 1,
      "alive": 179,
      "nominalPerSec": 60,
-     "daysIn4s": 244,
-     "perSec": 61,
-     "perfLabel": "每天计算约 3.46 毫秒 · 实际每秒 60.5 天"
+     "daysIn4s": 241,
+     "perSec": 60.25,
+     "perfLabel": "每天计算约 3.44 毫秒 · 实际每秒 60.0 天"
     },
     {
      "cpuThrottle": 4,
      "alive": 179,
      "nominalPerSec": 60,
-     "daysIn4s": 211,
-     "perSec": 52.75,
-     "perfLabel": "每天计算约 14.71 毫秒 · 实际每秒 49.3 天"
+     "daysIn4s": 223,
+     "perSec": 55.75,
+     "perfLabel": "每天计算约 14.16 毫秒 · 实际每秒 50.4 天"
     }
    ]
   },
@@ -108,14 +108,14 @@
    },
    "t365": {
     "days": 365,
-    "totalMs": 2447,
-    "maxDayMsInclRender": 16.899999999441206,
+    "totalMs": 2407.600000000559,
+    "maxDayMsInclRender": 17.40000000037253,
     "hash": "6381c50e",
     "day": 365
    },
    "t1000": {
     "days": 635,
-    "engineOnlyMs": 740.4000000003725,
+    "engineOnlyMs": 720.1000000005588,
     "day": 1000,
     "hash": "c0f9d5fa",
     "alive": 121
@@ -130,7 +130,7 @@
     "differs": true
    },
    "fast": {
-    "day": 1124
+    "day": 1121
    },
    "jump": "林远 #84",
    "closed": true,

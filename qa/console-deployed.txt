@@ -9,38 +9,38 @@
    "small": [],
    "status": 200,
    "autoRun": {
-    "dayAfterRun": 37,
-    "dayAfter800msPaused": 37,
+    "dayAfterRun": 38,
+    "dayAfter800msPaused": 38,
     "advanced": true,
     "pausedStable": true
    },
    "t365": {
     "days": 365,
-    "totalMs": 2359.100000000559,
-    "maxDayMsInclRender": 16.200000000186265,
-    "hash": "84f5081f",
+    "totalMs": 2404.7999999998137,
+    "maxDayMsInclRender": 19.40000000037253,
+    "hash": "6381c50e",
     "day": 365
    },
    "t1000": {
     "days": 635,
-    "engineOnlyMs": 678.6999999992549,
+    "engineOnlyMs": 735.3999999994412,
     "day": 1000,
-    "hash": "71940bf4",
-    "alive": 114
+    "hash": "c0f9d5fa",
+    "alive": 121
    },
    "det": {
     "seedA": 20261107,
-    "hashA1": "84f5081f",
-    "hashA2": "84f5081f",
+    "hashA1": "6381c50e",
+    "hashA2": "6381c50e",
     "same": true,
     "seedB": 12345,
-    "hashB": "7562485d",
+    "hashB": "cc0ed560",
     "differs": true
    },
    "fast": {
-    "day": 1120
+    "day": 1121
    },
-   "jump": "张一 #43",
+   "jump": "林远 #84",
    "closed": true,
    "rules": [
     [
@@ -67,12 +67,30 @@
    "uiSeed": {
     "seed": 12345,
     "day": 3,
-    "hash": "4bdc724d"
+    "hash": "2f68e9dd"
    },
    "labelAfterReset": {
     "day": 0,
     "label": "▶ 自动运行"
-   }
+   },
+   "fullPop": [
+    {
+     "cpuThrottle": 1,
+     "alive": 179,
+     "nominalPerSec": 60,
+     "daysIn4s": 244,
+     "perSec": 61,
+     "perfLabel": "每天计算约 3.51 毫秒 · 实际每秒 60.5 天"
+    },
+    {
+     "cpuThrottle": 4,
+     "alive": 179,
+     "nominalPerSec": 60,
+     "daysIn4s": 205,
+     "perSec": 51.25,
+     "perfLabel": "每天计算约 15.18 毫秒 · 实际每秒 46.2 天"
+    }
+   ]
   },
   "430": {
    "console": [],
@@ -83,38 +101,38 @@
    "small": [],
    "status": 200,
    "autoRun": {
-    "dayAfterRun": 37,
-    "dayAfter800msPaused": 37,
+    "dayAfterRun": 38,
+    "dayAfter800msPaused": 38,
     "advanced": true,
     "pausedStable": true
    },
    "t365": {
     "days": 365,
-    "totalMs": 2386.2000000001863,
-    "maxDayMsInclRender": 14.200000000186265,
-    "hash": "84f5081f",
+    "totalMs": 2497,
+    "maxDayMsInclRender": 20.899999999441206,
+    "hash": "6381c50e",
     "day": 365
    },
    "t1000": {
     "days": 635,
-    "engineOnlyMs": 673.5999999996275,
+    "engineOnlyMs": 721.7000000001863,
     "day": 1000,
-    "hash": "71940bf4",
-    "alive": 114
+    "hash": "c0f9d5fa",
+    "alive": 121
    },
    "det": {
     "seedA": 20261107,
-    "hashA1": "84f5081f",
-    "hashA2": "84f5081f",
+    "hashA1": "6381c50e",
+    "hashA2": "6381c50e",
     "same": true,
     "seedB": 12345,
-    "hashB": "7562485d",
+    "hashB": "cc0ed560",
     "differs": true
    },
    "fast": {
-    "day": 1123
+    "day": 1121
    },
-   "jump": "张一 #43",
+   "jump": "林远 #84",
    "closed": true,
    "rules": [
     [
@@ -141,7 +159,7 @@
    "uiSeed": {
     "seed": 12345,
     "day": 3,
-    "hash": "4bdc724d"
+    "hash": "2f68e9dd"
    },
    "labelAfterReset": {
     "day": 0,
@@ -149,5 +167,5 @@
    }
   }
  },
- "fresh": "84f5081f"
+ "fresh": "6381c50e"
 }
